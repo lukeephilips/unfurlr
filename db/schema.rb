@@ -10,12 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_05_15_162706) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_15_171609) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  # Custom types defined in this database.
+  # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "status", ["pending", "complete", "error"]
 
   create_table "previews", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.enum "status", default: "pending", null: false, enum_type: "status"
+    t.string "raw_url"
+    t.string "image_url"
   end
 end
