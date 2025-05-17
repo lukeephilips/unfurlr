@@ -12,8 +12,16 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+} from "@tanstack/react-query";
+import axios from "axios";
+import { config } from "./config";
 
 interface Message {
   id: number;
@@ -23,11 +31,31 @@ interface Message {
 }
 
 function App() {
+}
+
+
+const queryClient = new QueryClient();
+
+const useCreatePreview = () => {
+  return useMutation({
+    mutationFn: async (url: string) => {
+      const response = await axios.post<PreviewResponse>(
+        `${config.apiUrl}/api/previews`,
+        { url }
+      );
+      return response.data;
+    },
+  });
+};
+
+function ChatApp() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const createPreview = useCreatePreview();
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim()) {
+      console.log("newMessage", newMessage);
       const message: Message = {
         id: Date.now(),
         text: newMessage,
@@ -36,6 +64,25 @@ function App() {
       };
       setMessages([...messages, message]);
       setNewMessage("");
+
+      // Check if the message contains a URL
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = newMessage.match(urlRegex);
+
+      if (urls) {
+        console.log("urls", urls);
+        try {
+          const preview = await createPreview.mutateAsync(urls[0]);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === message.id ? { ...msg, preview } : msg
+            )
+          );
+          console.log("preview", preview);
+        } catch (error) {
+          console.error("Failed to create preview:", error);
+        }
+      }
     }
   };
 
@@ -103,7 +150,7 @@ function App() {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Type a message..."
+            placeholder="Type a message or paste a URL..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -120,6 +167,14 @@ function App() {
         </Box>
       </Container>
     </Box>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ChatApp />
+    </QueryClientProvider>
   );
 }
 
