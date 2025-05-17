@@ -26,6 +26,25 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      const message: Message = {
+        id: Date.now(),
+        text: newMessage,
+        sender: "user",
+        timestamp: new Date(),
+      };
+      setMessages([...messages, message]);
+      setNewMessage("");
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -86,26 +105,14 @@ function App() {
             variant="outlined"
             placeholder="Type a message..."
             value={newMessage}
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            multiline
             maxRows={4}
           />
           <IconButton
             color="primary"
+            onClick={handleSendMessage}
             sx={{ alignSelf: "flex-end" }}
           >
             <SendIcon />
